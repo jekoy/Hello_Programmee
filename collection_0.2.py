@@ -1,16 +1,41 @@
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import re
+import os
 
-def get_collection(url):
+def get_collection_title(url):
 	html = urlopen(url)
 	text = BeautifulSoup(html, 'html.parser')
-	question = text.findAll('a', {'href':re.compile(r'/question/\d{1,}$')})
-	answer = text.findAll('textarea', {'class':'content hidden'})
-	store_collection(question, answer)
+	title = text.find('h2', {'class':'zm-item-title zm-editable-content'})
+	return title.get_text().replace('\n', '')
 
-def store_collection(question, answer):
-	f = open('collection.txt', 'w', encoding = 'utf-8')
+def get_collection(url):
+	title = get_collection_title(url)
+	print('收藏夹 << '+ title + ' >>\n')
+	page_index = 1
+	page = ''
+	file_name = title
+	if not os.path.exists(file_name):
+		os.mkdir(file_name)
+	while True:
+		f = open(file_name + os.sep + str(page_index) + '.txt', 'w', encoding = 'utf-8')
+		html = urlopen(url + page)
+		text = BeautifulSoup(html, 'html.parser')
+		question = text.findAll('a', {'href':re.compile(r'/question/\d{1,}$')})
+		answer = text.findAll('textarea', {'class':'content hidden'})
+		store_collection(f, question, answer)
+		print(url + page)
+		print('  第 %d 页' % page_index + '加载完毕')
+		page = re.search(r'\?page=\d{1,}(?=">下一页)', text.decode())
+		page_index = page_index + 1
+		if page == None:
+			break
+		else:
+			page = page.group(0)
+	print('\n收藏夹 < '+ title + ' > 已加载完毕')
+	f.close()
+
+def store_collection(file, question, answer):
 	q_end = len(question)
 	a_end = len(answer) - 1
 	re_question_number = re.compile(r'\d{1,}', re.S)
@@ -21,8 +46,9 @@ def store_collection(question, answer):
 		while True:
 			q_string = question[i].get_text()
 			a_string = answer[j].get_text()
-			f.write(q_string + '\n-------------------------\n')
-			f.write(a_string.replace('<br>', '\n'))
+			file.write('\n-------------------------\n' + \
+				q_string + '\n-------------------------\n')
+			file.write(a_string.replace('<br>', '\n'))
 			j = j + 1
 			if j < a_end:
 				answer_nu = re.search(re_answer_number, answer[j].decode())
@@ -30,9 +56,7 @@ def store_collection(question, answer):
 					break
 			else:
 				break
-	f.close()
 
 number = '67808231'
 url = 'https://www.zhihu.com/collection/' + number
-page = ''
-get_collection(url + page)
+get_collection(url)
