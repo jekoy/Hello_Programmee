@@ -3,6 +3,24 @@ written in Python 3.5
 
 ------ 知乎爬虫 ------
 
+API
+登录知乎
+login(user, password)
+
+获取所有关注者信息
+get_all_followees(people, cookies)
+
+获取所有关注者的所有收藏夹
+get_all_followees_collections(people, cookies)
+
+获取某个用户的所有收藏夹
+get_all_collections(people, cookies)
+
+更新收藏夹
+update_collections(cookies)
+
+
+
 V 0.1
 爬取number字符串中的知乎收藏夹，每次爬取一页，将问题与答案写入collection文档，
 按回车键爬取下一页。自动过滤图片
