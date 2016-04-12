@@ -401,7 +401,6 @@ class Zhihu_Crawler(object):
 			self.__update(collection.group(0), int(count.group(0)))
 
 spider = Zhihu_Crawler()
-user = '770778010@qq.com'
-password = 'xupeng'
+user = ''
+password = ''
 spider.login(user, password)
-# spider.update_collections()
