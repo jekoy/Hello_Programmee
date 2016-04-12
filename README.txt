@@ -7,14 +7,23 @@ API
 登录知乎
 login(user, password)
 
-获取所有关注者信息
-get_all_followees(people, cookies)
+获取某个用户的知乎 id
+get_hash_id(people)
 
-获取所有关注者的所有收藏夹
-get_all_followees_collections(people, cookies)
+get_followees_number(people)
+获取某个用户关注者人数
+
+获取某个用户的所有关注者
+get_all_followees(people)
+
+获取某个用户所有关注者的所有收藏夹
+get_all_followees_collections(people)
 
 获取某个用户的所有收藏夹
-get_all_collections(people, cookies)
+get_all_collections(people)
+
+保存某个用户的所有收藏夹
+store_all_collections(people)
 
 更新收藏夹
 update_collections(cookies)
@@ -48,3 +57,6 @@ V 0.5
 V 0.6
 增加：
 更新自己所有的收藏夹（即更新自上次打开收藏夹之后更新的内容）
+
+V 0.7
+解决版本0.5中获取关注者时无法加载动态页面的问题
