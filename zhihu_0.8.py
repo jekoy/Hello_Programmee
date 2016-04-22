@@ -64,7 +64,6 @@ class Zhihu_Crawler(object):
 		'''
 		f = open(file, 'r')
 		cookies = json.load(f)
-		# print(cookies)
 		f.close()
 		return cookies
 
@@ -105,7 +104,9 @@ class Zhihu_Crawler(object):
 		text = bs(html.text, 'html.parser')
 		title = text.find('h2', \
 			{'class':'zm-item-title zm-editable-content'})
-		return title.get_text().replace('\n', '')
+		title = re.sub(r'\\|/|\"|\?|\*|\:|\<|\>|\||\n|\s', '', \
+			title.get_text())
+		return title
 
 	def __get_collection(self, url, number):
 		'''
@@ -117,17 +118,15 @@ class Zhihu_Crawler(object):
 		print('    收藏夹 << '+ title + ' >>')
 		page_index = 1
 		page = ''
-		file_name = title
-		if not os.path.exists(file_name):
-			os.mkdir(file_name)
+		if not os.path.exists(title):
+			os.mkdir(title)
 		while True:
-			f = open(file_name + os.sep + str(page_index) + '.txt', \
-				'w', encoding = 'utf-8')
+			f = open(title + os.sep + str(page_index) + '.txt', \
+				'w', encoding='utf-8')
 			html = self.session.get(url + page)
 			text = bs(html.text, 'html.parser')
-			question = text.findAll('a', \
-				{'href':re.compile(r'/question/\d{1,}$')})
-			answer = text.findAll('textarea', {'class':'content hidden'})
+			questions = self.__get_questions(text)
+			answers = self.__get_answer(text)
 			self.__store_collection(f, question, answer)
 			print(url + page)
 			print('  page %d completed' % page_index)
@@ -140,11 +139,44 @@ class Zhihu_Crawler(object):
 		print('\n第 %d' %number + ' 个收藏夹 << '+ title +' >> 已加载完毕\n')
 		f.close()
 
+	def __get_questions(self, text):
+		'''
+			在单个页面内获取所有问题及其序列号，组成元组列表并返回
+
+		'''
+		questions = []
+		content = text.findAll('h2', \
+			{'class':re.compile(r'zm-item-title')})
+		nu_re = re.compile(r'(?<=question/)\d+')
+		content = content[1:]
+		for each in content:
+			question = each.get_text()[:-1]
+			number = re.search(nu_re, each.decode()).group(0)
+			questions.append([number, question])
+		return questions
+
+	def __get_answer(self, text):
+		'''
+			在单个页面内获取所有回答及其问题序列号，组成元组列表并返回
+
+		'''
+		answers = []
+		content = text.findAll('textarea', {'class':'content hidden'})
+		nu_re = re.compile(r'(?<=question/)\d+')
+		for each in content:
+			answer = each.get_text()
+			number = re.search(nu_re, each.decode()).group(0)
+			answers.append([number, answer])
+		return answers
+
 	def __store_pic(self, title, url):
+		'''
+			保存图片
+
+		'''
 		html = urlopen(url)
 		index = 1
-		title = title[:-1]
-		suffix = '.'.append(url.split('.')[-1])
+		suffix = '.' + url.split('.')[-1]
 		f_name = title + str(index) + suffix
 		while os.path.exists(f_name):
 			index = index + 1
@@ -159,15 +191,11 @@ class Zhihu_Crawler(object):
 
 			返回过滤后的答案
 		'''
-		index  = 0
-		pics  = re.findall(r'(?<=<img src=")(.*?)(?=")', answer)
+		print(answer)
+		p_re = re.compile(r'(?<=img src=")(.*?)(?=")', re.S)
 		for url in pics:
-			self.__store_pic(title, url)
-		pics2 = re.findall(r'(?<=&quot;https)(.*?)(?=&quot)', answer)
-		for url2 in pics2:
-			self.__store_pic(title, 'https' + url2)
-		answer = re.sub(r'&lt;(.*?)&gt;', '\n', answer)	# 过滤换行符
-		answer = re.sub(r'<(.*?)>', ' ', answer)		# 过滤 html 标记对
+			self.__store_pic(title, 'https' + url)
+		answer = re.sub('<(.*?)>', ' ', answer)			# 过滤 html 标记对
 		return answer
 
 	def __store_collection(self, file, question, answer):
@@ -176,23 +204,19 @@ class Zhihu_Crawler(object):
 
 			无返回类型
 		'''
-		q_end = len(question)
-		a_end = len(answer)
-		re_question_number = re.compile(r'\d{1,}', re.S)
-		re_answer_number = re.compile(r'(?<=question/)\d{1,}', re.S)
 		j = 0
-		for i in range(0, q_end):
-			question_nu = re.search(re_question_number, question[i].decode())
-			q_str = question[i].get_text()
-			while j != a_end:
-				answer_nu = re.search(re_answer_number, answer[j].decode())
-				if answer_nu.group(0) != question_nu.group(0):
+		for q_elem in questions:
+			while True:
+				if answers[j][0] == q_elem[0]:
+					file.write('\n-------------------------\n' + \
+						q_elem[1] + '\n-------------------------\n')
+					if len(q_elem[1]) > 28:
+						q_elem[1] = q_elem[1][0:28]
+					answer = self.__filter_answer(q_elem[1], answers[j][1])
+					file.write(answer)
+					j = j + 1
+				else:
 					break
-				a_str = self.__answer_filter(answer[j].get_text())
-				file.write('\n-------------------------\n' + \
-					q_str + '\n-------------------------\n')
-				file.write(a_str)
-				j = j + 1
 
 	def __store_partial_collection(self, file, question, answer, size):
 		'''
@@ -200,26 +224,21 @@ class Zhihu_Crawler(object):
 
 			无返回类型
 		'''
-		q_end = len(question)
-		a_end = len(answer)
-		re_question_number = re.compile(r'\d{1,}', re.S)
-		re_answer_number = re.compile(r'(?<=question/)\d{1,}', re.S)
 		j = 0
-		for i in range(0, q_end):
-			question_nu = re.search(re_question_number, question[i].decode())
-			q_string = question[i].get_text()
-			while j != a_end:
-				answer_nu = re.search(re_answer_number, answer[j].decode())
-				if answer_nu.group(0) != question_nu.group(0):
+		for q_elem in questions:
+			while True:
+				if answers[j][0] == q_elem[0]:
+					file.write('\n-------------------------\n' + \
+						q_elem[1] + '\n-------------------------\n')
+					if len(q_elem[1]) > 28:
+						q_elem[1] = q_elem[1][0:28]
+					answer = self.__filter_answer(q_elem[1], answers[j][1])
+					file.write(answer)
+					j = j + 1
+					if j == size:
+						return
+				else:
 					break
-				a_string = self.__answer_filter(question[i].get_text(), \
-					answer[j].get_text())
-				file.write('\n-------------------------\n' + \
-					q_string + '\n-------------------------\n')
-				file.write(a_string)
-				j = j + 1
-				if j == size:
-					return
 
 	def __update(self, collection, count):
 		'''
@@ -231,35 +250,31 @@ class Zhihu_Crawler(object):
 		title = self.__get_collection_title(url)
 		page_index = 1
 		page = ''
-		file_name = title
 		size = 0
 		while True:
-			file_name = file_name.replace('|', ' ')
-			f = open(file_name + '.txt', \
-				'w', encoding = 'utf-8')
+			file = open(title + '.txt', 'w', encoding='utf-8')
+			print('文件名 %s' % title)
 			html = self.session.get(url + page)
 			text = bs(html.text, 'html.parser')
-			question = text.findAll('a', \
-				{'href':re.compile(r'/question/\d+$')})
-			answer = text.findAll('textarea', {'class':'content hidden'})
-			size = len(answer)
+			questions = self.__get_questions(text)
+			answers   = self.__get_answer(text)
+			size = len(answers)
 			number = 0
 			if size >= count:
 				number = count
 			else:
 				number = size
 			count -= number
-			self.__store_partial_collection(f, \
-				question, answer, number)
-			if (count == 0):
+			self.__store_partial_collection(file, questions, answers, number)
+			if count == 0:
 				break
-			page = re.search(r'\?page=\d{1,}(?=">下一页)', text.decode())
+			page = re.search(r'\?page=\d+(?=">下一页)', text.decode())
 			page_index = page_index + 1
 			if page == None:
 				break
 			else:
 				page = page.group(0)
-		print('收藏夹 << '+ title +' >> 已加载完毕\n')
+		print('收藏夹 << '+ title +' >> 已更新完毕\n')
 
 	def login(self):
 		'''
@@ -351,8 +366,6 @@ class Zhihu_Crawler(object):
 			for each in content:
 				followee = re.search(regex, each.decode())
 				users.append(followee.group(0))
-		# for each in users:
-			# print(each)
 		return followees
 
 	def get_all_followees_collections(self, people):
@@ -365,7 +378,7 @@ class Zhihu_Crawler(object):
 		print(people + ' 共有 %d 个关注者\n' % end)
 		for i in range(0, end):
 			print('第 %d 个关注者的收藏夹\n' % (i + 1))
-			self.get_all_collections(followees[i])
+			self.store_all_collections(followees[i])
 			print('第 %d 个关注者的收藏夹加载完毕\n' % (i + 1))
 
 	def get_all_collections(self, people):
@@ -386,8 +399,7 @@ class Zhihu_Crawler(object):
 			for each in collection_page:
 				collections.append(each.attrs['href'] \
 					.replace('/collection/', ''))
-			page = re.search(r'\?page=\d+(?=">下一页)', \
-				text.decode())
+			page = re.search(r'\?page=\d+(?=">下一页)', text.decode())
 			if page == None:
 				break
 		return collections
@@ -398,11 +410,11 @@ class Zhihu_Crawler(object):
 
 		'''
 		print('开始加载所有 %s 的收藏夹 ...\n' % people)
+		parent_dir = os.getcwd()
 		if not os.path.exists(people):
 			os.mkdir(people)
 		else:
 			return
-		parent_dir = os.getcwd()
 		os.chdir(people)
 		collections = self.get_all_collections(people)
 		end = len(collections)
@@ -418,23 +430,29 @@ class Zhihu_Crawler(object):
 	def update_collections(self):
 		html = self.session.get('http://www.zhihu.com/collections')
 		text = bs(html.text, 'html.parser')
+		# 所有收藏夹
 		collections = text.findAll('h2', {'class':'zm-item-title'})
 		collection_re = re.compile(r'(?<=collection/)\d+')
-		update_re = re.compile(r'(?<=<span class="zg-num">)\d+(?=</span>)')
-		c = num = 0
+		update_re = re.compile(r'(?<=<span class="zg-num">)(\d+)(?=</span>)')
+		num = 0
 		for each in collections:
 			s = str(each)
+			# 收藏夹的序列号
 			collection = re.search(collection_re, s)
+			# 收藏夹更新数量
 			count = re.search(update_re, s)
 			if collection != None and count != None:
-				C = collection.group(0)
-				c = num = int(count.group(0))
-				self.__update(C, num)
-		print('共更新 %d 个' % c)
+				c = collection.group(0)
+				n = int(count.group(0))
+				print(c, n)
+				self.__update(c, n)
+				num = num + 1
+				print('第 %d 个收藏夹更新完毕\n' % num)
+		print('共更新 %d 个' % num)
 		print('所有收藏夹已更新完毕 :)')
+
 
 user = '770778010@qq.com'
 password = 'xupeng'
 spider = Zhihu_Crawler(user, password)
 spider.login()
-spider.update_collections()
