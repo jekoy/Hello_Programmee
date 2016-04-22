@@ -1,18 +1,15 @@
-This is a repository for zhihu crawler.
-written in Python 3.5
-
 ------ 知乎爬虫 ------
 
 	API
 
 登录知乎
-login(user, password)
+login()
 
 获取某个用户的知乎 id
 get_hash_id(people)
 
-get_followees_number(people)
 获取某个用户关注者人数
+get_followees_number(people)
 
 获取某个用户的所有关注者
 get_all_followees(people)
@@ -27,7 +24,7 @@ get_all_collections(people)
 store_all_collections(people)
 
 更新收藏夹
-update_collections(cookies)
+update_collections()
 
 
 
