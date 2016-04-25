@@ -366,7 +366,7 @@ class Zhihu_Crawler(object):
 			for each in content:
 				followee = re.search(regex, each.decode())
 				users.append(followee.group(0))
-		return followees
+		return users
 
 	def get_all_followees_collections(self, people):
 		'''
