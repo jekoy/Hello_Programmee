@@ -1,3 +1,5 @@
+import os
+
 class Programmee():
 	def __init__(self, user='None'):
 		self.user            =  user
@@ -19,26 +21,26 @@ class Programmee():
 		self.followers       = 0
 
 	def __str__(self):
-		S =  '用户名: ' + self.user + '\n'
-		S += '姓名:   ' + self.name + '\n'
-		S += '个签:   ' + self.bio + '\n'
-		S += '简介:   ' + self.content + '\n'
-		S += '教育:   ' + self.education + '\n'
-		S += '教育+:  ' + self.education_extra + '\n'
-		S += '行业:   ' + self.business + '\n'
-		S += '公司:   ' + self.employment + '\n'
-		S += '职位:   ' + self.position + '\n'
-		S += '提问:   ' + str(self.asks) + '\n'
-		S += '回答:   ' + str(self.answers) + '\n'
-		S += '被赞同: ' + str(self.agree) + '\n'
-		S += '被感谢: ' + str(self.thanks) + '\n'
-		S += '被收藏: ' + str(self.favorites) + '\n'
-		S += '收藏夹: ' + str(self.collections) + '\n'
-		S += '关注了: ' + str(self.followees) + '\n'
-		S += '关注者: ' + str(self.followers) + '\n\n\n'
-		return S
+		info =  '用户名: ' + self.user + '\n'
+		info += '姓名:   ' + self.name + '\n'
+		info += '个签:   ' + self.bio + '\n'
+		info += '简介:   ' + self.content + '\n'
+		info += '教育:   ' + self.education + '\n'
+		info += '教育+:  ' + self.education_extra + '\n'
+		info += '行业:   ' + self.business + '\n'
+		info += '公司:   ' + self.employment + '\n'
+		info += '职位:   ' + self.position + '\n'
+		info += '提问:   ' + str(self.asks) + '\n'
+		info += '回答:   ' + str(self.answers) + '\n'
+		info += '被赞同: ' + str(self.agree) + '\n'
+		info += '被感谢: ' + str(self.thanks) + '\n'
+		info += '被收藏: ' + str(self.favorites) + '\n'
+		info += '收藏夹: ' + str(self.collections) + '\n'
+		info += '关注了: ' + str(self.followees) + '\n'
+		info += '关注者: ' + str(self.followers) + '\n'
+		return info
 
 	def save(self):
-		with open(self.user, 'w') as f:
+		with open('programmee' + os.sep + self.user, 'w') as f:
 			f.write(str(self))
 			f.close()

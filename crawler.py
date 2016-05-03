@@ -29,7 +29,7 @@ class Crawler():
 		self.hash_re = \
 			re.compile(r'(?<=hash_id&quot;: &quot;)(.*?)(?=&quot;)')
 		# 知乎女程序员判定正则表达式
-		self.pro_re = re.compile(u'程序[^猿]|CS|计算机|软件|代码|前端|\
+		self.pro_re = re.compile(u'程序[^猿]|CS|计算机|软件|代码|前端| \
 			阿里|腾讯|百度|网易|Google|Microsoft|Facebook')
 
 	def __load_cookies(self):
@@ -152,10 +152,10 @@ class Crawler():
 		self.session.cookies.update(self.__load_cookies())
 		url = self.people_url + people + '/about'
 		text = self.__get_site(url)
-		text = soup(text, 'html.parser')
 		if text == None:
 			print('info not retrieved :(')
 			return
+		text = soup(text, 'html.parser')
 		r = self.__verify_girl(text)
 		if r == False:
 			return
@@ -242,8 +242,9 @@ class Crawler():
 		girl.followers = int(nums[1])
 
 		self.__save_girl(girl)
-		print(girl)
+		# print(girl)
 		return girl
 
 	def __save_girl(self, girl):
+		print('save ' + girl.user)
 		girl.save()
