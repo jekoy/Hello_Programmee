@@ -3,7 +3,8 @@ from bs4 import BeautifulSoup as soup
 from programmee import Programmee
 
 class Crawler():
-	def __init__(self):
+	def __init__(self, user, signal):
+		self.user = user
 		self.session	  = requests.session()
 		# cookies 文件名称
 		self.cookie_file  = 'cookies'
@@ -13,10 +14,16 @@ class Crawler():
 		self.people_url   = self.base_url + '/people/'
 		# 知乎关注者页面
 		self.fo_url = 'http://www.zhihu.com/node/ProfileFolloweesListV2'
-		self.session.headers = headers = {
-			'User-Agent':
+		if signal / 2 == 0:
+			self.headers['User-Agent'] = \
 				'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:44.0) \
-				 Gecko/20100101 Firefox/44.0',
+			 	Gecko/20100101 Firefox/44.0'
+		else:
+			self.headers['User-Agent'] = \
+				'Mozilla/5.0 (Windows NT 6.1, WOW64) AppleWebKit/537.36 \
+				(KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36 \
+				QQBrowser/9.3.6873.400'
+		self.session.headers = headers = {
 			'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3',
 			'Accept-Encoding': 'gzip, deflate, br',
 			'Host':'www.zhihu.com',
@@ -47,14 +54,14 @@ class Crawler():
 		count = 0
 		while count < 3:
 			try:
-				html = self.session.get(url, timeout=5)
+				html = self.session.get(url, timeout=3)
 				if html.status_code == 200:
 					text = html.text
 					break
 			except requests.exceptions.RequestException:
 				pass
 			count += 1
-			time.sleep(2)
+			time.sleep(1)
 		return text
 
 	def __post_site(self, url, data):
@@ -63,14 +70,14 @@ class Crawler():
 		while count < 3:
 			try:
 				html = self.session.post(url, data=data)
-				# print(html.status_code)
 				if html.status_code == 200:
 					text = ''.join(html.json()['msg'])
 					break
 			except requests.exceptions.RequestException:
-				pass
+				print(html.status_code)
 			count += 1
-			time.sleep(2)
+			time.sleep(1)
+			print(html.status_code)
 		return text
 
 	def __get_xsrf(self):
@@ -109,12 +116,12 @@ class Crawler():
 		else:
 			return False
 
-	def get_all_followees(self, people):
+	def get_all_followees(self):
 		'''
 			获取某个用户的所有关注者并置于列表, 然后返回
 
 		'''
-		url = self.people_url + people + '/followees'
+		url = self.people_url + self.user + '/followees'
 		_xsrf = self.__get_xsrf()
 		hash_id, followee_number = self.__get_argument(url)
 		if  hash_id == None or \
@@ -144,13 +151,13 @@ class Crawler():
 				users.append(followee)
 		return users
 
-	def get_girl(self, people):
+	def get_girl(self):
 		'''
 			获取单个账号的信息
 
 		'''
 		self.session.cookies.update(self.__load_cookies())
-		url = self.people_url + people + '/about'
+		url = self.people_url + self.user + '/about'
 		text = self.__get_site(url)
 		if text == None:
 			print('info not retrieved :(')
@@ -160,7 +167,7 @@ class Crawler():
 		if r == False:
 			return
 
-		girl = Programmee(people)
+		girl = Programmee(self.user)
 		# 昵称
 		content = text.find('a', {'class':'name'})
 		if content != None:
