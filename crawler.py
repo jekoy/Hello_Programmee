@@ -1,9 +1,9 @@
-import requests, re, json, time
+import requests, re, json, time, subprocess, os, sys
 from bs4 import BeautifulSoup as soup
 from programmee import Programmee
 
 class Crawler():
-	def __init__(self, user, signal):
+	def __init__(self, user):
 		self.user = user
 		self.session	  = requests.session()
 		# cookies 文件名称
@@ -14,22 +14,22 @@ class Crawler():
 		self.people_url   = self.base_url + '/people/'
 		# 知乎关注者页面
 		self.fo_url = 'http://www.zhihu.com/node/ProfileFolloweesListV2'
-		if signal / 2 == 0:
-			self.headers['User-Agent'] = \
-				'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:44.0) \
-			 	Gecko/20100101 Firefox/44.0'
-		else:
-			self.headers['User-Agent'] = \
-				'Mozilla/5.0 (Windows NT 6.1, WOW64) AppleWebKit/537.36 \
-				(KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36 \
-				QQBrowser/9.3.6873.400'
+		self.session.data = {
+			'email':'770778010@qq.com',
+			'password':'xupeng',
+			'remember_me':'true',
+		}
 		self.session.headers = headers = {
-			'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3',
-			'Accept-Encoding': 'gzip, deflate, br',
+			'User-Agent':
+				'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:44.0) \
+				 Gecko/20100101 Firefox/44.0',
+			# 'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3',
+			# 'Accept-Encoding': 'gzip, deflate, br',
 			'Host':'www.zhihu.com',
 			'Referer': 'http://www.zhihu.com/',
-			'Connection': 'keep-alive',
+			# 'Connection': 'keep-alive',
 		}
+
 		# 用户信息正则表达式
 		self.info_re = re.compile(r'(?<=>)\d+(?=<)')
 		# 用户 hash id 正则表达式
@@ -150,6 +150,12 @@ class Crawler():
 				followee = info.group(0)
 				users.append(followee)
 		return users
+
+	def __self_name(self):
+		html = self.session.get('http://www.zhihu.com')
+		text = soup(html.text, 'html.parser')
+		name = text.find('span', {'class':'name'})
+		return name.get_text()
 
 	def get_girl(self):
 		'''
