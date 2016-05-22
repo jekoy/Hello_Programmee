@@ -4,19 +4,19 @@ from crawler import Crawler
 from pybloom import BloomFilter
 import time, os
 
-
 class ProgrammeeThread(Thread):
-	global signal
+	global start
+	global end
 	global queue
 	global bf
+	global f1
+	global f2
 	def __init__(self, user):
 		super().__init__()
-		signal += 1
-		print(signal)
-		self.crawler = Crawler(user, signal)
+		self.crawler = Crawler(user)
+		f1.write(user + '\n')
 
 	def run(self):
-		print(self.crawler.user)
 		girl = self.crawler.get_girl()
 		if girl != None:
 			fos = self.crawler.get_all_followees()
@@ -25,12 +25,21 @@ class ProgrammeeThread(Thread):
 					if not each in bf:
 						bf.add(each)
 						queue.put(each)
+		end = time.time()
+		if int((end - start) % 300) == 0:
+			f2.write(str(queue.qsize()) + '\n')
+		print(queue.qsize())
 
-signal =
-queue = Queue()
-bf = BloomFilter(capacity=100000, error_rate=0.001)
+def initialize_bf():
+	f = open('searched', 'r')
+	while True:
+		user = f.readline()
+		if len(user) == 0:
+			break
+		user = user[:-1]
+		bf.add(user)
 
-def initialize():
+def initialize_queue():
 	global queue
 	global bf
 	directory = 'programmee'
@@ -39,28 +48,26 @@ def initialize():
 		bf.add(each)
 		queue.put(each)
 
-# initialize()
-# queue.put('cici')
-# threads = []
-
-t = ProgrammeeThread('zong-hua')
-t.run()
-
-while not queue.empty():
-	t = ProgrammeeThread(queue.get())
-	t.run()
-
-# while not queue.empty():
-# 	threads.clear()
-# 	for i in range(0, 5):
-# 		if queue.empty():
-# 			break
-# 		user = queue.get()
-# 		t = ProgrammeeThread(user)
-# 		threads.append(t)
-# 		# print(queue.qsize())
-# 		# t.run()
-# 	for each in threads:
-# 		each.start()
-# 	for each in threads:
-# 		each.join()
+if __name__ == '__main__':
+	start = time.time()
+	end = time.time()
+	threads = []
+	queue = Queue()
+	bf = BloomFilter(capacity=1000000, error_rate=0.001)
+	initialize_bf()
+	initialize_queue()
+	f1 = open('searched', 'a')
+	f2 = open('qsize', 'w')
+	while not queue.empty():
+		threads.clear()
+		for i in range(0, 5):
+			if queue.empty():
+				break
+			user = queue.get()
+			t = ProgrammeeThread(user)
+			threads.append(t)
+		for each in threads:
+			each.start()
+			time.sleep(0.2)
+		for each in threads:
+			each.join()
