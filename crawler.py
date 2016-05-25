@@ -36,7 +36,7 @@ class Crawler():
 		self.hash_re = \
 			re.compile(r'(?<=hash_id&quot;: &quot;)(.*?)(?=&quot;)')
 		# 知乎女程序员判定正则表达式
-		self.pro_re = re.compile(u'程序[^猿]|CS|计算机|软件|代码|前端| \
+		self.pro_re = re.compile(u'程序|CS|计算机|软件|代码|前端| \
 			阿里|腾讯|百度|网易|Google|Microsoft|Facebook')
 
 	def __load_cookies(self):
