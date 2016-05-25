@@ -12,7 +12,7 @@
 1. 性别条目: 女
 
 2. 满足正则表达式:
-	re = u'程序[^猿]|CS|计算机|软件|代码|前端|阿里|腾讯|百度|网易|Google|Microsoft|Facebook'
+	re = u'程序|CS|计算机|软件|代码|前端|阿里|腾讯|百度|网易|Google|Microsoft|Facebook'
 
 
 最佳实现:
