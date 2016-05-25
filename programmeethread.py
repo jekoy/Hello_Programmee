@@ -66,7 +66,7 @@ if __name__ == '__main__':
 		for each in threads:
 			each.join()
 		end = time.time()
-		if int((end - start) % 300) == 0:
+		if end - start > 300:
 			start = end
 			f2.write(str(queue.qsize()) + '\n')
 		print(queue.qsize())
