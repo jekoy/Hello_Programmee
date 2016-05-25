@@ -5,8 +5,6 @@ from pybloom import BloomFilter
 import time, os
 
 class ProgrammeeThread(Thread):
-	global start
-	global end
 	global queue
 	global bf
 	global f1
@@ -25,10 +23,6 @@ class ProgrammeeThread(Thread):
 					if not each in bf:
 						bf.add(each)
 						queue.put(each)
-		end = time.time()
-		if int((end - start) % 300) == 0:
-			f2.write(str(queue.qsize()) + '\n')
-		print(queue.qsize())
 
 def initialize_bf():
 	f = open('searched', 'r')
@@ -71,3 +65,8 @@ if __name__ == '__main__':
 			time.sleep(0.2)
 		for each in threads:
 			each.join()
+		end = time.time()
+		print(queue.qsize())
+		if end - start > 300:
+			start = time.time()
+			f2.write(str(queue.qsize()) + '\n')
