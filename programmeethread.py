@@ -8,7 +8,6 @@ class ProgrammeeThread(Thread):
 	global queue
 	global bf
 	global f1
-	global f2
 	def __init__(self, user):
 		super().__init__()
 		self.crawler = Crawler(user)
@@ -17,6 +16,7 @@ class ProgrammeeThread(Thread):
 	def run(self):
 		girl = self.crawler.get_girl()
 		if girl != None:
+			time.sleep(1)
 			fos = self.crawler.get_all_followees()
 			if fos != None:
 				for each in fos:
@@ -62,11 +62,11 @@ if __name__ == '__main__':
 			threads.append(t)
 		for each in threads:
 			each.start()
-			time.sleep(0.2)
+			time.sleep(0.5)
 		for each in threads:
 			each.join()
 		end = time.time()
-		print(queue.qsize())
-		if end - start > 300:
-			start = time.time()
+		if int((end - start) % 300) == 0:
+			start = end
 			f2.write(str(queue.qsize()) + '\n')
+		print(queue.qsize())

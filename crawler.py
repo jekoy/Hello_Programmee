@@ -14,20 +14,12 @@ class Crawler():
 		self.people_url   = self.base_url + '/people/'
 		# 知乎关注者页面
 		self.fo_url = 'http://www.zhihu.com/node/ProfileFolloweesListV2'
-		self.session.data = {
-			'email':'770778010@qq.com',
-			'password':'xupeng',
-			'remember_me':'true',
-		}
 		self.session.headers = headers = {
 			'User-Agent':
 				'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:44.0) \
 				 Gecko/20100101 Firefox/44.0',
-			# 'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3',
-			# 'Accept-Encoding': 'gzip, deflate, br',
 			'Host':'www.zhihu.com',
 			'Referer': 'http://www.zhihu.com/',
-			# 'Connection': 'keep-alive',
 		}
 
 		# 用户信息正则表达式
