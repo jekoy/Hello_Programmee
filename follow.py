@@ -18,7 +18,6 @@ class Follow():
 				 like Gecko) Chrome/33.0.1750.117 Safari/537.36 MyIE',
 			'Host':'www.zhihu.com',
 			'Origin':'https://www.zhihu.com',
-			'X-Requested-With':'XMLHttpRequest'
 		}
 
 	def __load_cookies(self):
@@ -58,11 +57,11 @@ class Follow():
 		hash_id = info_hash.group(0)
 		return hash_id
 
-	def follow(self):
+	def follow(self, data):
 		count = 0
 		while count < 3:
 			try:
-				html = self.session.post(self.follow_url)
+				html = self.session.post(self.follow_url, data)
 				if html.status_code == 200:
 					print('follow ' + self.user)
 					break
@@ -76,15 +75,18 @@ class Follow():
 		self.session.cookies.update(self.__load_cookies())
 		self.url = self.people_url + self.user
 		hash_id = self.__get_hash()
+		print(self.user)
+		print(hash_id)
 		if hash_id == None:
 			print('failed to get user hash id :(')
 			return
 		_xsrf = self.__get_xsrf()
-		self.session.data['method'] = 'follow_member'
-		self.session.data['params'] = json.dumps({'hash_id': hash_id})
-		self.session.data['_xsrf']  = _xsrf
+		data = { }
+		data['method'] = 'follow_member'
+		data['params'] = json.dumps({'hash_id': hash_id})
+		data['_xsrf']  = _xsrf
 		self.session.headers['Referer'] = self.url
-		self.follow()
+		self.follow(data)
 
 if __name__ == '__main__':
 	with open('follow', 'r') as f:
